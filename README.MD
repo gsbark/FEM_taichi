@@ -1,33 +1,36 @@
 # FEM taichi 
-#Solver type : 1:Taichi linalg direct solver / 2: Conjugate gradient solver 
+Finite element solver for Non-linear Analysis.
 
-## Table of Contents
-- [Available analysis type](#analysis_type)
-- [Available element type](#element_type)
-- [Available Solver type](#element_type)
-
-## Available loading type
-- Load control
-- Displacement control
-
-## Available solver type 
-- Taichi direct sparse solver 
-- Conjugate gradient solver 
-
-## Available analysis type
-
+## Features 
+### Analysis type
 - Elastic 
 - Elastoplastic J2
 - Phase field brittle fracture (Amor split)
 - Phase field ductile fracture (Amor split)
 
-## Available element type
+### Element type
 - 2D plane strain element
 - 3D Hex element
 
+### Loading type
+- Load control
+- Displacement control
 
-###
-Direct solver OK
-need to check CG 
-need to check other analysis types
-need to check 3D elements 
+### Solver type 
+- Taichi direct sparse solver 
+    CPU support / GPU only for f32
+- Conjugate gradient solver 
+    CPU  / GPU support 
+## Usage
+
+
+
+
+
+
+
+
+
+
+
+

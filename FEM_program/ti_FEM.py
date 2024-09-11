@@ -338,7 +338,8 @@ class FEM_program:
             #                    inc)
                 
             WriteVTK(self.Input.Domain['Elements_connectivity'],
-                     self.Input.Domain['Node_coords']+self.Input.Tot_U.reshape(-1,self.Input.dim),   
+                     self.Input.Domain['Node_coords'],
+                     #+self.Input.Tot_U.reshape(-1,self.Input.dim),   
                      export_data,
                      file=f"./Analysis_res/vtk/{inc}.vtk")
                     #self.Input.Domain['Node_coords']+self.Input.Tot_U.reshape(-1,self.Input.dim),        
