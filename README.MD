@@ -3,7 +3,6 @@
 Finite element solver for Non-linear Analysis.
 
 <img src="pf.gif" alt="Phase field brittle fracture" width="400" height="400">
-<img src="pf.gif" alt="Phase field brittle fracture" width="400" height="400">
 
 
 ## Dependencies
