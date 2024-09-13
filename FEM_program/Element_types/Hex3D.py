@@ -466,7 +466,7 @@ class BrittleFracture_3D(HexElement):
             
             e = ti.Vector([[strain[0], strain[3]/2,   strain[5]/2],
                            [strain[3]/2, strain[1],   strain[4]/2],
-                           [strain[5]/2, strain[4]/2, strain[2]]])
+                           [strain[5]/2, strain[4]/2,   strain[2]]])
             
             I = ti.math.eye(3)
             trace_e_plus = (e.trace() + ti.abs(e.trace()))/2

@@ -392,8 +392,8 @@ class P_strain_BrittleFracture(Element2D):
             g_deg = self.g_PF[iel,i]
             
             devprj=ti.Vector([[0.666666667,-0.333333333, 0.00000000],
-                                [-0.333333333,0.666666667,0.00000000],
-                                [0.000000000,0.000000000,0.50000000]])
+                              [-0.333333333,0.666666667, 0.00000000],
+                              [0.000000000,0.000000000,  0.50000000]])
                 
             soid = ti.Vector(([1],[1],[0]))
             
@@ -467,9 +467,9 @@ class P_strain_BrittleFracture(Element2D):
             strain = self.strain_gp_curr[iel,i]
             g_deg = self.g_PF[iel,i]
             
-            e = ti.Vector([[strain[0],   strain[2]/2,    0    ],
-                          [strain[2]/2, strain[1],      0    ],
-                          [    0,          0,       strain[3]]])
+            e = ti.Vector([[strain[0],   strain[2]/2,    0.0    ],
+                           [strain[2]/2, strain[1],      0.0    ],
+                           [    0.0,          0.0,     strain[3]]])
             
             I = ti.math.eye(3)
         
@@ -495,11 +495,11 @@ class P_strain_BrittleFracture(Element2D):
 
 @ti.data_oriented
 class P_strain_DuctileFracture(Element2D):
-    def __init__(self,E,n,sy,H,l0,Gc,k,ngp,Elements_connectivity,Node_coords,Elements_DoFs,dtype):
+    def __init__(self,E,n,sy,H,l0,Gc1,Gc2,k,ngp,Elements_connectivity,Node_coords,Elements_DoFs,dtype):
         super().__init__(E,n,ngp,Elements_connectivity,Node_coords,Elements_DoFs,dtype)
         
         self.l0 = l0
-        self.Gc = Gc
+        self.Gc = Gc1
         self.k = k
 
         self.epcrit = 0.0
@@ -512,10 +512,13 @@ class P_strain_DuctileFracture(Element2D):
         self.pl_tolerance = 1e-8
 
         self.Dg = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))        # Plastic multiplier der
-        self.psi_plus = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # Positive part of energy
+        self.psi_plus_mode_1 = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # Positive part of energy
+        self.psi_plus_mode_2 = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # Positive part of energy
+
         self.psi_total = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp)) # Total energy
         
-        self.History_psi = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # History variable
+        self.History_psi_mode1 = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # History variable
+        self.History_psi_mode2 = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))  # History variable
       
         self.c_PF = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))      #Phase field variable
         self.g_PF = ti.field(dtype=self.dtype,shape=(self.num_elements,ngp))      #Degradation variable
@@ -542,12 +545,13 @@ class P_strain_DuctileFracture(Element2D):
                 f=self.b
             elif e_acc_pl>self.epcrit:
                 f=((1-self.b)/(self.a**2))*(e_acc_pl-self.epcrit-self.a)**2+self.b
-                
-            a = N*(2*self.History_psi[iel,i]/(f*self.Gc) +1/self.l0)
+        
+        
+            a = N*(2*self.History_psi_mode1[iel,i]/(f*self.Gc) +1/self.l0)
             A1 = a.outer_product(N)
             A2 = BB.transpose()*(self.l0)@BB
             k_local += (A1+A2)*vol
-            A3=(2*self.History_psi[iel,i]/(f*self.Gc))*N
+            A3=(2*self.History_psi_mode1[iel,i]/(f*self.Gc))*N
 
             F += A3*vol
         return k_local,F
@@ -557,7 +561,7 @@ class P_strain_DuctileFracture(Element2D):
 
         for i in range(self.ngp):
             N = self.N_func[iel,i]
-            self.c_PF[iel,i] = ti.math.dot(c_local,N)
+            self.c_PF[iel,i] = ti.max(ti.math.dot(c_local,N),1)
             self.g_PF[iel,i] = (1-self.c_PF[iel,i])**2
         pass
     
@@ -573,8 +577,8 @@ class P_strain_DuctileFracture(Element2D):
                        [0.0,0.0,0.0]])
         
         devprj=ti.Vector([[0.666666667,-0.333333333, 0.00000000],
-                            [-0.333333333,0.666666667,0.00000000],
-                            [0.000000000,0.000000000,0.50000000]])
+                          [-0.333333333,0.666666667, 0.00000000],
+                          [0.000000000,0.000000000,  0.50000000]])
             
         soid = ti.Vector(([1],[1],[0]))
         
@@ -720,9 +724,9 @@ class P_strain_DuctileFracture(Element2D):
             strain = self.strain_gp_curr[iel,i]
             g_deg = self.g_PF[iel,i]
             
-            e = ti.Vector([[strain[0],   strain[2]/2,    0    ],
-                          [strain[2]/2, strain[1],      0    ],
-                          [    0,          0,       strain[3]]])
+            e = ti.Vector([[strain[0],   strain[2]/2,    0.0    ],
+                           [strain[2]/2, strain[1],      0.0    ],
+                           [    0.0,          0.0,     strain[3]]])
             
             I = ti.math.eye(3)
 
@@ -735,5 +739,5 @@ class P_strain_DuctileFracture(Element2D):
             psi_plus = 1/2*self.K*trace_e_plus**2 + self.G*trace_strain_dev
             psi_minus = 1/2*self.K*trace_e_minus**2
             psi_total = g_deg*psi_plus + psi_minus
-            self.psi_plus[iel,i],self.psi_total[iel,i] = psi_plus,psi_total
+            self.psi_plus_mode_1[iel,i],self.psi_total[iel,i] = psi_plus,psi_total
         pass

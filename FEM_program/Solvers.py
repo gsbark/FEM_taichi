@@ -124,16 +124,16 @@ class CG_solver:
 
 class SolutionAlgorithm:
     def __init__(self,
-                 type:str,
+                 control:str,
                  tolerance:float,
-                 max_iter:int,
+                 NR_max_iter:int,
                  tot_increments:int,
                  total_load:float,
                  dtype):
         
-        self.Solution_algorithm_type = type
+        self.control_type = control
         self.NR_tol = tolerance
-        self.max_iter = max_iter
+        self.NR_max_iter = NR_max_iter
         self.tot_increments = tot_increments
         self.tot_load = total_load
 
@@ -146,14 +146,14 @@ class SolutionAlgorithm:
         assert self.solver_type=='CG'
         self.CG = CG_solver(index_ij=index_ij,pointers=pointers,b=b)
 
-    def Direct_solve(self,K_stiff:ti.types,F_ext:ti.types.ndarray()): #type:ignore
+    def Direct_solve(self,K_stiff:ti.types.template(),F_ext:ti.types.ndarray()): #type:ignore
         solver = ti.linalg.SparseSolver(solver_type="LLT",dtype=self.dtype)
         solver.analyze_pattern(K_stiff)
         solver.factorize(K_stiff)
         sol = solver.solve(F_ext)
         return sol
     
-    def CG_solve(self,K_stiff:ti.types,F_ext:ti.types.ndarray()):    #type:ignore 
+    def CG_solve(self,K_stiff:ti.types.template(),F_ext:ti.types.ndarray()):    #type:ignore 
         self.CG.initialize(K_stiff,F_ext)
         out = self.CG.solve()
         return out
@@ -163,16 +163,16 @@ class LoadControl(SolutionAlgorithm):
                  type,
                  solver_type,
                  NR_tolerance,
-                 max_iter,
+                 NR_max_iter,
                  total_increments,
                  total_load,
                  dtype):
-        super().__init__(type,NR_tolerance, max_iter, total_increments, total_load,dtype)
+        super().__init__(type,NR_tolerance, NR_max_iter, total_increments, total_load,dtype)
 
         self.load_factor = total_load/total_increments
         self.solver_type = solver_type
     
-    def Solve_system(self,K_stiff:ti.template(),F_ext:ti.types.ndarray()): #type:ignore 
+    def Find_displacement(self,K_stiff:ti.template(),F_ext:ti.types.ndarray(),iter:int): #type:ignore 
         
         if self.solver_type=='Direct':
             sol = self.Direct_solve(K_stiff,F_ext)
@@ -182,20 +182,20 @@ class LoadControl(SolutionAlgorithm):
     
 class DisplacementControl(SolutionAlgorithm):
     def __init__(self,
+                 control:str,
                  type:str,
-                 solver_type:str,
                  NR_tolerance:float,
-                 max_iter:int,
+                 NR_max_iter:int,
                  total_increments:int, 
                  total_load:int,
                  controlled_dof:int,
                  dtype):
         
-        super().__init__(type,NR_tolerance, max_iter, total_increments, total_load,dtype)
+        super().__init__(control,NR_tolerance, NR_max_iter, total_increments, total_load,dtype)
 
         self.controlled_dof = controlled_dof
         self.target_disp = total_load/total_increments
-        self.solver_type = solver_type
+        self.solver_type = type
     
     def Solve_system(self,K_stiff:ti.template(),F_ext:ti.types.ndarray()):  #type:ignore 
         
@@ -213,7 +213,6 @@ class DisplacementControl(SolutionAlgorithm):
             self.u_a1 = U_d[self.controlled_dof[0]]
             self.load_factor = self.target_disp/self.u_a1
             mult_array_scalar(U_d,self.load_factor)
-            # U_d = self.Solve_system(K_stiff,F_residual)
         elif iter >1:
             ub = self.Solve_system(K_stiff,F_residual)
             u_b1 = ub[self.controlled_dof[0]]
