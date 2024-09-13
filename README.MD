@@ -1,7 +1,8 @@
 # FEM taichi 
 
 Finite element solver for Non-linear Analysis.
-![GIF](pf.gif)
+<img src="pf.gif" alt="Phase field brittle fracture" width="300" height="200">
+
 
 ## Dependencies
 The following libraries are required:
