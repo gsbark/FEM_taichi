@@ -1,0 +1,41 @@
+####################
+# units : mm, kN, MPa 
+####################
+
+Element:
+  type : 4-Quad
+  ngp : 4
+Elastic_prop:
+  E : 210000
+  n : 0.3
+Plasticity:  
+  H : 50.0
+  sy : 235.0
+Fracture : 
+  l0 : 0.25
+  Gc1 : 1.31
+  Gc2 : 10.31
+  k : 0
+  # Fc : 0.00013
+#Type of analysis         (1:Elastic,2:Elastoplastic,3:Brittle_fracture,4:Ductile_fracture)
+Analysis_type : 3            
+#Type of mesh             (1:Load_mesh, 2:Create 2D structured 3: Create 3D structured)
+Mesh_type:                 
+  type : 1       
+  Domain : 'AsNotched'
+  dim : 2
+  nel_x : 10
+  nel_y : 10
+  nel_z : 2
+Solver:
+  control : displacement
+  type :    Direct                 #Select solver type : 1) Conjugate gradient 2) Direct solver 
+  NR_tolerance : 0.00001
+  NR_max_iter : 20
+  total_increments : 200
+  total_load : 0.2
+Kinematic_constraints : True
+dtype: float64
+
+
+
