@@ -27,7 +27,7 @@ The following libraries are required:
  - Conjugate gradient solver 
 
 ## Usage
-First modify the input file 'input.yaml'. The boundary conditions have to be specified manually in the 'FEM_utils.py' file. To run the FEM program execute `main.py`. 
+First modify the input file `input.yaml`. The boundary conditions must be manually specified in the `FEM_utils.py` file. To run the FEM program execute `main.py`. 
 
 
 
