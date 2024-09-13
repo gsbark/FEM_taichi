@@ -3,8 +3,16 @@
 Finite element solver for Non-linear Analysis.
 ![GIF](pf.gif)
 
+## Dependencies
+The following libraries are required:
+| Package               | Version (>=) |
+|-----------------------|--------------|
+| numpy                 | 1.25.2       |
+| taichi                | 1.6.0        |
+| gmsh (optional)       | 4.11.1       |
+
 ## Features 
- ### Analysis type
+ ### Analysis types
 - Elastic 
 - Elastoplastic J2
 - Phase field brittle fracture 
@@ -19,7 +27,7 @@ Finite element solver for Non-linear Analysis.
  - Conjugate gradient solver 
 
 ## Usage
-- TOdo 
+First modify the input file 'input.yaml'. The boundary conditions have to be specified manually in the 'FEM_utils.py' file. To run the FEM program execute `main.py`. 
 
 
 
