@@ -48,6 +48,16 @@ class CG_solver:
             self.r[i] = b[i]
         for i in self.d:
             self.d[i] = self.M[i] * self.r[i]  # d0 = M^(-1) * r
+<<<<<<< HEAD
+=======
+
+    @ti.kernel
+    def rmax(self, ) -> float:  # max of abs(r), modified latter by reduce_max
+        rm = 0.
+        for i in self.r:
+            ti.atomic_max(rm, ti.abs(self.r[i]))
+        return rm
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
     
     @ti.kernel
     def compute_Ad(self):  # compute A multiple d
@@ -58,26 +68,47 @@ class CG_solver:
             for j in range(start_idx,end_idx):
                 self.Ad[i] += self.A[j] * self.d[self.index_ij[j]]
     @ti.kernel
+<<<<<<< HEAD
     def compute_rMr(self) -> float:  
+=======
+    def compute_rMr(self, ) -> float:  # r * M^(-1) * r
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
         rMr = 0.
         for i in self.r:
             rMr += self.r[i] * self.M[i] * self.r[i]
         return rMr
     
     @ti.kernel 
+<<<<<<< HEAD
     def update_x_r(self,x:ti.types.ndarray(),alpha:float): #type:ignore 
         for j in x:
             x[j] += alpha * self.d[j]
             self.r[j] -= alpha * self.Ad[j]
             
+=======
+    def update_x(self,x:ti.types.ndarray(), alpha: float): #type:ignore 
+        for j in x:
+            x[j] += alpha * self.d[j]
+    
+    @ti.kernel
+    def update_r(self, alpha: float):
+        for j in self.r:
+            self.r[j] -= alpha * self.Ad[j]
+
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
     @ti.kernel 
     def update_d(self, beta: float):
         for j in self.d:
             self.d[j] = self.M[j] * self.r[j] + beta * self.d[j]
     
+<<<<<<< HEAD
     @staticmethod
     @ti.kernel
     def dot_product(y: ti.template(), z: ti.template()) -> float: #type:ignore 
+=======
+    @ti.kernel
+    def dot_product(self, y: ti.template(), z: ti.template()) -> float: #type:ignore 
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
         res = 0.
         for i in y:
             res += y[i] * z[i]
@@ -85,27 +116,49 @@ class CG_solver:
 
     def solve(self):
         self.r_d_init(self.b)
+<<<<<<< HEAD
         r0 = np.sqrt(self.dot_product(self.r, self.r))
         
+=======
+        r0 = self.rmax()  # the inital residual scale
+        
+
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
         print("\033[32;1m the initial residual scale is {} \033[0m".format(r0))
         for i in range(self.b.shape[0]):  # CG will converge within at most b.shape[0] loops
             t0 = time()
             self.compute_Ad()
             rMr = self.compute_rMr()
             alpha = rMr / self.dot_product(self.d, self.Ad)
+<<<<<<< HEAD
             self.update_x_r(self.x,alpha)
             beta = self.compute_rMr() / rMr
             self.update_d(beta)
             r_norm = np.sqrt(self.dot_product(self.r, self.r))
+=======
+            self.update_x(self.x,alpha)
+            self.update_r(alpha)
+            beta = self.compute_rMr() / rMr
+            self.update_d(beta)
+            rmax = self.rmax()  # the infinite norm of residual, shold be modified latter to the reduce max
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
             t1 = time()
 
             if i % 100 == 0:
                 print("\033[35;1m the {}-th loop, norm of residual is {}, in-loop time is {} s\033[0m".format(
+<<<<<<< HEAD
                     i, r_norm, t1 - t0
                 ))
             if r_norm < self.eps :  
                 print("\033[35;1m the {}-th loop, norm of residual is {}, in-loop time is {} s\033[0m".format(
                     i, r_norm, t1 - t0
+=======
+                    i, rmax, t1 - t0
+                ))
+            if rmax < self.eps :  # converge?
+                print("\033[35;1m the {}-th loop, norm of residual is {}, in-loop time is {} s\033[0m".format(
+                    i, rmax, t1 - t0
+>>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
                 ))
                 break
         return self.x
