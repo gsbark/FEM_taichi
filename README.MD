@@ -1,12 +1,10 @@
 # FEM taichi 
 
-Finite element solver for Non-linear Analysis.
-<!-- ![GIF](pf.gif) -->
-<!-- <img src="example.gif" alt="Phase field brittle fracture" width="400" height="400"> -->
+Finite element solver for Non-linear Analysis in Python and <a href="https://www.taichi-lang.org/">Taichi</a>.
+
 <p align="center">
     <img src="example.gif" alt="Phase field brittle fracture" width="400" height="400">
 </p>
-
 
 
 ## Dependencies
