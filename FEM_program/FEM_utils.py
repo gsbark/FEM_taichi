@@ -8,11 +8,7 @@ import meshio
 import vtk
 import shutil
 import os 
-<<<<<<< HEAD
 from scipy.sparse import csr_matrix,coo_array
-=======
-from numba import jit
->>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
 
 class Preprocess_FEM:
     def __init__(self,
@@ -193,11 +189,7 @@ class Preprocess_FEM:
         
 #---------------------------------------------
 #Calculate Constraint matrix 
-<<<<<<< HEAD
 def Get_ConstraintMatrix(const_dof:np.ndarray,dofs:int):
-=======
-def Get_ConstraintMatrix(const_dof:np.ndarray,dofs:np.ndarray):
->>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
     #Initialize Constraint matrix
     C_mat = np.zeros((const_dof.shape[1],dofs),dtype=np.float32)
     for i in range(const_dof.shape[1]):
@@ -233,7 +225,6 @@ def generate_row_pointers(indices,values=None):
         return row_pointers,sorted_indices,values[indices[:, 0].argsort()]
     else:
         return row_pointers.astype(np.int32),sorted_indices.astype(np.int32)
-<<<<<<< HEAD
     
 def get_CSR(sparse_idx):
     A = coo_array((np.arange(sparse_idx.shape[0]),
@@ -248,31 +239,6 @@ def get_Sparse_Kss(kinematic_cons,dofs):
     KSS= (1e8*cc.transpose()@cc).tocoo()
     KSS_sparse_ij = np.stack((KSS.row,KSS.col),axis=1)      
     return KSS_sparse_ij,KSS.data
-=======
-
-# @jit(nopython = True) 
-# def generate_row_pointers(indices,values=None):
-#     # Sort the array based on row indices
-#     sorted_indices = indices[indices[:, 0].argsort()]
-    
-#     row_pointers = np.zeros(max(indices[:, 0]) + 2, dtype=np.int32)
-#     for idx in sorted_indices:
-#         row_pointers[idx[0] + 1] += 1
-
-#     # Accumulate counts to obtain row pointers
-#     row_pointers = np.cumsum(row_pointers)
-#     if values is not None:
-#         return row_pointers,sorted_indices,values[indices[:, 0].argsort()]
-#     else:
-#         return row_pointers.astype(np.int32),sorted_indices.astype(np.int32)
-
-def get_Sparse_Kss(kinematic_cons,dofs):
-    C = Get_ConstraintMatrix(kinematic_cons,dofs)
-    KSs = 1e8*C.T@C
-    Sparse_idx = np.vstack(np.nonzero(KSs),dtype=np.int32).T
-    Sparse_KSS = KSs[Sparse_idx[:,0],Sparse_idx[:,1]]
-    return Sparse_idx,Sparse_KSS
->>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
 #---------------------------------------------
 
 
