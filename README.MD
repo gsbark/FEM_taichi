@@ -1,12 +1,11 @@
 # FEM taichi 
 
 Finite element solver for Non-linear Analysis.
-<<<<<<< HEAD
 ![GIF](pf.gif)
 
 ## Features 
  ### Analysis type
-=======
+
 
 <img src="pf.gif" alt="Phase field brittle fracture" width="400" height="400">
 
@@ -21,7 +20,6 @@ The following libraries are required:
 
 ## Features 
  ### Analysis types
->>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
 - Elastic 
 - Elastoplastic J2
 - Phase field brittle fracture 
@@ -36,11 +34,8 @@ The following libraries are required:
  - Conjugate gradient solver 
 
 ## Usage
-<<<<<<< HEAD
-- TOdo 
-=======
-First modify the input file `input.yaml`. The boundary conditions must be manually specified in the `FEM_utils.py` file. To run the FEM program execute `main.py`. 
->>>>>>> c6e9ee96e3d55b9255fa897de508a395bcb5392e
+- First modify the input file `input.yaml`. The boundary conditions must be manually specified in the `FEM_utils.py` file. To run the FEM program execute `main.py`. 
+
 
 
 
