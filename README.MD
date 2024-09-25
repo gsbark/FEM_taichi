@@ -2,7 +2,10 @@
 
 Finite element solver for Non-linear Analysis.
 <!-- ![GIF](pf.gif) -->
-<img src="example.gif" alt="Phase field brittle fracture" width="400" height="400">
+<!-- <img src="example.gif" alt="Phase field brittle fracture" width="400" height="400"> -->
+<div style="text-align: center;">
+    <img src="example.gif" alt="Phase field brittle fracture" width="400" height="400">
+</div>
 
 
 
