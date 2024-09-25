@@ -1,6 +1,6 @@
 import taichi as ti 
 import numpy as np 
-from FEM_utils import generate_sparse_ij,get_Sparse_Kss,generate_row_pointers,WriteVTK
+from FEM_utils import generate_sparse_ij,get_Sparse_Kss,get_CSR,WriteVTK
 from ti_utils import add,max_norm,normalized_norm
 from Solvers import LoadControl,DisplacementControl
 
@@ -56,24 +56,25 @@ class FEM_program:
             CG solver with sparse matrix CRS (row pointers, column indices)
             3 sets of pointers and C_indices (K_stiff,KSS,K_total)
             '''
-            Kstif_ij = generate_sparse_ij(Input.Domain['Elements_DoFs'],Input.Dofs_boolean_mask,Input.all_dofs_map)
+            Kstif_coo_ij = generate_sparse_ij(Input.Domain['Elements_DoFs'],Input.Dofs_boolean_mask,Input.all_dofs_map)
             #Constrainted matrix
             if Input.Kinematic_constraints == True: 
-                KSS_ij,KSS_val = get_Sparse_Kss(Input.kinem_constraints,n_DoFs)
-                Ktot_ij =  np.unique(np.concatenate((Kstif_ij,KSS_ij)),axis=0)
-                self.KSS_ij= ti.Vector.field(2,ti.i32,shape=KSS_ij.shape[0])
-                self.KSS_val = ti.field(dtype=Input.dtype,shape=KSS_val.shape[0])
-                self.KSS_ij.from_numpy(KSS_ij)
-                self.KSS_val.from_numpy(KSS_val)
+                KSS_coo_ij,KSS_values = get_Sparse_Kss(Input.kinem_constraints,n_DoFs)
+                Ktot_ij =  np.unique(np.concatenate((Kstif_coo_ij,KSS_coo_ij)),axis=0)
+                self.KSS_ij= ti.Vector.field(2,ti.i32,shape=KSS_coo_ij.shape[0])
+                self.KSS_val = ti.field(dtype=Input.dtype,shape=KSS_values.shape[0])
+                self.KSS_ij.from_numpy(KSS_coo_ij)
+                self.KSS_val.from_numpy(KSS_values)
             else:
-                Ktot_ij = Kstif_ij
-            Ktot_pointers,Ktot_sort_ij = generate_row_pointers(Ktot_ij)
-            self.Ktot_Jindex = ti.field(ti.i32,shape=Ktot_sort_ij.shape[0])
-            self.Ktot_pointers = ti.field(ti.i32,shape=Ktot_pointers.shape[0])
-            self.K_stiff = ti.field(dtype=Input.dtype,shape=Ktot_sort_ij.shape[0])
+                Ktot_ij = Kstif_coo_ij
+            
+            K_row_pointers,K_col_indx = get_CSR(Ktot_ij)
+            self.Ktot_Jindex = ti.field(ti.i32,shape=K_col_indx.shape[0])
+            self.Ktot_pointers = ti.field(ti.i32,shape=K_row_pointers.shape[0])
+            self.K_stiff = ti.field(dtype=Input.dtype,shape=K_col_indx.shape[0])
     
-            self.Ktot_pointers.from_numpy(Ktot_pointers)
-            self.Ktot_Jindex.from_numpy(Ktot_sort_ij)
+            self.Ktot_pointers.from_numpy(K_row_pointers)
+            self.Ktot_Jindex.from_numpy(K_col_indx)
             self.Solver.Initialize_CG_solver(self.Ktot_Jindex,self.Ktot_pointers,self.P_ext.shape[0])
 
         #Initialize PF fields
@@ -81,9 +82,7 @@ class FEM_program:
             '''
             Only direct solver support for phase field analysis
             '''
-            self.K_PF = ti.linalg.SparseMatrixBuilder(Input.num_nodes, Input.num_nodes, 
-                                                      max_num_triplets=Input.num_nodes*2000,dtype=Input.dtype) 
-            
+            self.K_PF = ti.linalg.SparseMatrixBuilder(Input.num_nodes, Input.num_nodes,max_num_triplets=Input.num_nodes*2000,dtype=Input.dtype) 
             self.F_PF = ti.ndarray(dtype=Input.dtype,shape=(Input.num_nodes))
             self.C_PF = ti.ndarray(dtype=Input.dtype,shape=(Input.num_nodes))
 

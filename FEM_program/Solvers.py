@@ -48,13 +48,6 @@ class CG_solver:
             self.r[i] = b[i]
         for i in self.d:
             self.d[i] = self.M[i] * self.r[i]  # d0 = M^(-1) * r
-
-    @ti.kernel
-    def rmax(self, ) -> float:  # max of abs(r), modified latter by reduce_max
-        rm = 0.
-        for i in self.r:
-            ti.atomic_max(rm, ti.abs(self.r[i]))
-        return rm
     
     @ti.kernel
     def compute_Ad(self):  # compute A multiple d
@@ -65,29 +58,26 @@ class CG_solver:
             for j in range(start_idx,end_idx):
                 self.Ad[i] += self.A[j] * self.d[self.index_ij[j]]
     @ti.kernel
-    def compute_rMr(self, ) -> float:  # r * M^(-1) * r
+    def compute_rMr(self) -> float:  
         rMr = 0.
         for i in self.r:
             rMr += self.r[i] * self.M[i] * self.r[i]
         return rMr
     
     @ti.kernel 
-    def update_x(self,x:ti.types.ndarray(), alpha: float): #type:ignore 
+    def update_x_r(self,x:ti.types.ndarray(),alpha:float): #type:ignore 
         for j in x:
             x[j] += alpha * self.d[j]
-    
-    @ti.kernel
-    def update_r(self, alpha: float):
-        for j in self.r:
             self.r[j] -= alpha * self.Ad[j]
-
+            
     @ti.kernel 
     def update_d(self, beta: float):
         for j in self.d:
             self.d[j] = self.M[j] * self.r[j] + beta * self.d[j]
     
+    @staticmethod
     @ti.kernel
-    def dot_product(self, y: ti.template(), z: ti.template()) -> float: #type:ignore 
+    def dot_product(y: ti.template(), z: ti.template()) -> float: #type:ignore 
         res = 0.
         for i in y:
             res += y[i] * z[i]
@@ -95,29 +85,27 @@ class CG_solver:
 
     def solve(self):
         self.r_d_init(self.b)
-        r0 = self.rmax()  # the inital residual scale
+        r0 = np.sqrt(self.dot_product(self.r, self.r))
         
-
         print("\033[32;1m the initial residual scale is {} \033[0m".format(r0))
         for i in range(self.b.shape[0]):  # CG will converge within at most b.shape[0] loops
             t0 = time()
             self.compute_Ad()
             rMr = self.compute_rMr()
             alpha = rMr / self.dot_product(self.d, self.Ad)
-            self.update_x(self.x,alpha)
-            self.update_r(alpha)
+            self.update_x_r(self.x,alpha)
             beta = self.compute_rMr() / rMr
             self.update_d(beta)
-            rmax = self.rmax()  # the infinite norm of residual, shold be modified latter to the reduce max
+            r_norm = np.sqrt(self.dot_product(self.r, self.r))
             t1 = time()
 
             if i % 100 == 0:
                 print("\033[35;1m the {}-th loop, norm of residual is {}, in-loop time is {} s\033[0m".format(
-                    i, rmax, t1 - t0
+                    i, r_norm, t1 - t0
                 ))
-            if rmax < self.eps :  # converge?
+            if r_norm < self.eps :  
                 print("\033[35;1m the {}-th loop, norm of residual is {}, in-loop time is {} s\033[0m".format(
-                    i, rmax, t1 - t0
+                    i, r_norm, t1 - t0
                 ))
                 break
         return self.x
